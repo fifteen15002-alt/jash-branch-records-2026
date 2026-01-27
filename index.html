@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jash Branch Records</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* THEME VARIABLES */
+            --bg: #f8fafc; 
+            --surface: #ffffff; 
+            --text-main: #0f172a; 
+            --text-sub: #64748b;
+            --border: #e2e8f0; 
+            --primary: #2563eb; 
+            --primary-dark: #1e40af;
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --radius: 8px; 
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            
+            /* FONTS */
+            --font-ui: 'Inter', sans-serif;
+            --font-data: 'IBM Plex Mono', monospace;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a; 
+            --surface: #1e293b; 
+            --text-main: #f8fafc; 
+            --text-sub: #94a3b8;
+            --border: #334155; 
+            --primary: #60a5fa; 
+            --primary-dark: #3b82f6;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        body { 
+            font-family: var(--font-ui); 
+            background: var(--bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            font-size: 15px; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* --- NAVIGATION --- */
+        nav { 
+            background: var(--surface); 
+            border-bottom: 1px solid var(--border); 
+            padding: 15px 20px; 
+            min-height: 70px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100;
+        }
+
+        .brand-container {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .brand-logo { height: 45px; width: auto; display: block; }
+        
+        .brand-logo-fallback {
+            height: 40px; width: 40px; background: #333; border-radius: 4px; 
+            display: none; align-items: center; justify-content: center; 
+            color: white; font-weight: bold;
+        }
+
+        .brand-text { 
+            font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
+            color: var(--text-main); text-transform: uppercase;
+        }
+
+        .btn-header-action {
+            background: var(--text-main); color: var(--bg); border: none;
+            padding: 8px 14px; border-radius: 6px; font-size: 11px;
+            font-weight: 700; cursor: pointer; width: fit-content;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            display: none; font-family: var(--font-ui); transition: 0.2s;
+            margin-left: 10px;
+        }
+        .btn-header-action:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .nav-controls { display: flex; gap: 10px; }
+        
+        .btn-icon { 
+            background: transparent; border: 1px solid var(--border); 
+            color: var(--text-main); width: 36px; height: 36px; 
+            border-radius: var(--radius); cursor: pointer; 
+            font-size: 18px; transition: 0.2s; display: flex; 
+            align-items: center; justify-content: center;
+        }
+        .btn-icon:hover { background: var(--bg); border-color: var(--primary); color: var(--primary); }
+
+        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinning { animation: spin-once 0.5s ease-in-out; }
+
+        main { 
+            max-width: 1000px; margin: 0 auto; padding: 20px; 
+            flex: 1; width: 100%; box-sizing: border-box;
+        }
+
+        /* --- TOOLBAR --- */
+        .toolbar { 
+            margin-bottom: 20px; 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+        }
+        
+        /* Search Input */
+        .search-input { 
+            flex: 2; /* Takes up more space */
+            min-width: 200px;
+            padding: 14px; border-radius: var(--radius); 
+            border: 1px solid var(--border); background: var(--surface); 
+            color: var(--text-main); font-family: var(--font-ui); font-size: 15px; 
+            box-shadow: var(--shadow); box-sizing: border-box; 
+        }
+        .search-input:focus { outline: none; border-color: var(--primary); }
+
+        /* Sort/Filter Dropdown */
+        .filter-select {
+            flex: 1;
+            min-width: 160px;
+            padding: 14px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 15px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .filter-select:focus { outline: none; border-color: var(--primary); }
+
+        /* --- CARDS & GRIDS --- */
+        .branch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 40px; }
+        .branch-card { 
+            background: var(--surface); border: 1px solid var(--border); 
+            border-radius: var(--radius); padding: 40px 20px; text-align: center; 
+            cursor: pointer; transition: 0.2s; box-shadow: var(--shadow); 
+        }
+        .branch-card:hover { transform: translateY(-4px); border-color: var(--primary); }
+        .branch-icon { font-size: 48px; display: block; margin-bottom: 15px; }
+        .branch-name { font-weight: 700; font-size: 18px; margin-bottom: 5px; }
+
+        .records-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .record-card { 
+            background: var(--surface); border: 1px solid var(--border); 
+            border-radius: var(--radius); padding: 20px; display: flex; 
+            justify-content: space-between; align-items: center; 
+            box-shadow: var(--shadow); flex-wrap: wrap; gap: 15px; transition: 0.2s; 
+            position: relative; overflow: hidden;
+        }
+        
+        .client-name-link { color: var(--primary); cursor: pointer; text-decoration: none; font-weight: 700; font-size: 17px; }
+        .client-name-link:hover { text-decoration: underline; }
+        .item-name { color: var(--text-sub); font-size: 13px; margin-top: 4px; font-weight: 500; }
+
+        .stats-area { flex: 1; min-width: 140px; text-align: right; }
+        .stat-val { font-family: var(--font-data); font-weight: 600; font-size: 16px; display: block; letter-spacing: -0.5px; } 
+        .stat-bal { color: var(--danger); } .stat-paid { color: var(--success); }
+
+        .actions-area { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-card { padding: 8px 14px; border-radius: var(--radius); font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-main); font-family: var(--font-ui); }
+        .btn-card:hover { background: var(--bg); }
+        .btn-card.pay { border-color: var(--primary); background: var(--primary); color: white; }
+
+        /* OVERDUE BADGE */
+        .badge-overdue {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--danger);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-bottom-left-radius: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        /* --- LOADING & FOOTER --- */
+        .loader-container { text-align: center; padding: 60px; color: var(--text-sub); }
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; margin: 0 auto 15px auto; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        footer { text-align: center; padding: 30px; color: var(--text-sub); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: auto; }
+
+        /* --- MODALS --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-box { background: var(--surface); padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .close-btn { float: right; cursor: pointer; font-size: 24px; color: var(--text-sub); line-height: 0.5; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } .full-span { grid-column: span 2; }
+        .input-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-group input, .input-group textarea { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text-main); box-sizing: border-box; font-family: var(--font-data); font-size: 14px; border-radius: 6px; }
+        .btn-primary { background: var(--text-main); color: var(--bg); border: none; padding: 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-family: var(--font-ui); font-size: 14px; width: 100%; margin-top: 20px; }
+
+        /* SPECIFIC DATA FONTS */
+        #p-bal, #soa-output, .history-table td { font-family: var(--font-data); }
+        #soa-output { font-size: 12px; line-height: 1.4; white-space: pre; height: 200px; resize: none; border:none; background: var(--bg); padding:10px; width:100%; box-sizing:border-box;}
+        
+        /* HISTORY TABLE */
+        .history-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; }
+        .history-table th { text-align: left; color: var(--text-sub); border-bottom: 1px solid var(--border); padding: 8px; font-family: var(--font-ui); font-size: 11px; text-transform: uppercase; }
+        .history-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text-main); }
+
+        @media (max-width: 600px) {
+            .record-card { flex-direction: column; align-items: flex-start; }
+            .stats-area { width: 100%; text-align: left; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+            .actions-area { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+            .btn-card { text-align: center; padding: 10px; }
+            .brand-text { font-size: 16px; }
+            .toolbar { flex-direction: column; } /* Stack inputs on mobile */
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <nav>
+        <div class="brand-container">
+            <img src="3.PNG" alt="Jash Logo" class="brand-logo" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex'">
+            <div id="fallback-logo" class="brand-logo-fallback">J</div>
+
+            <div class="brand-text">Branch Records</div>
+            <button id="headerNewBtn" class="btn-header-action" onclick="openModal('newRecordModal')">+ NEW CUSTOMER</button>
+        </div>
+
+        <div class="nav-controls">
+            <button class="btn-icon" id="backBtn" onclick="goHome()" style="display:none;" title="Back">←</button>
+            <button class="btn-icon" id="refreshBtn" onclick="refreshData()" title="Refresh Data">↻</button>
+            <button class="btn-icon" id="themeBtn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="branch-grid" id="branch-select">
+            <div class="branch-card" onclick="promptPass('Sogod')">
+                <span class="branch-icon">🏢</span>
+                <div class="branch-name">Sogod</div>
+                <div style="font-size:12px; color:var(--text-sub)">RESTRICTED</div>
+            </div>
+            <div class="branch-card" onclick="promptPass('Baybay')">
+                <span class="branch-icon">🏬</span>
+                <div class="branch-name">Baybay</div>
+                <div style="font-size:12px; color:var(--text-sub)">RESTRICTED</div>
+            </div>
+            <div class="branch-card" onclick="promptPass('Hinunangan')">
+                <span class="branch-icon">🏪</span>
+                <div class="branch-name">Hinunangan</div>
+                <div style="font-size:12px; color:var(--text-sub)">RESTRICTED</div>
+            </div>
+        </div>
+
+        <div id="data-view" style="display:none;">
+            <div class="toolbar">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search name..." onkeyup="renderRecords()">
+                
+                <select id="sortFilter" class="filter-select" onchange="renderRecords()">
+                    <option value="default">Show All (A-Z)</option>
+                    <option value="recent">Recently Paid</option>
+                    <option value="late">Overdue / Late</option>
+                </select>
+            </div>
+            <div id="records-container"></div>
+        </div>
+    </main>
+
+    <footer>powered by Maki System</footer>
+
+    <div class="modal-overlay" id="passModal">
+        <div class="modal-box" style="max-width:300px; text-align:center;">
+            <div class="close-btn" onclick="closeModal('passModal')">&times;</div>
+            <h3 style="margin-top:0;">Security Check</h3>
+            <input type="password" id="passInput" placeholder="ACCESS CODE" style="text-align:center; letter-spacing:4px; font-size:20px;">
+            <button class="btn-primary" onclick="checkPass()">UNLOCK</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="newRecordModal">
+        <div class="modal-box">
+            <div class="close-btn" onclick="closeModal('newRecordModal')">&times;</div>
+            <h3 style="margin-top:0;">New Customer</h3>
+            <div class="form-grid">
+                <div class="input-group full-span"><label>Full Name</label><input type="text" id="nr-name"></div>
+                <div class="input-group full-span"><label>Address</label><input type="text" id="nr-address"></div>
+                <div class="input-group"><label>Item Name</label><input type="text" id="nr-item"></div>
+                <div class="input-group"><label>Total Price (₱)</label><input type="number" id="nr-total"></div>
+                <div class="input-group"><label>Date Delivered</label><input type="date" id="nr-date"></div>
+                <div class="input-group"><label>Term (Months)</label><input type="text" id="nr-term" placeholder="e.g. 6"></div>
+                <div class="input-group"><label>Agent</label><input type="text" id="nr-agent"></div>
+                <div class="input-group"><label>Phone</label><input type="text" id="nr-phone"></div>
+            </div>
+            <button class="btn-primary" onclick="saveNewRecord()">SAVE PROFILE</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-box" style="max-width:350px;">
+            <div class="close-btn" onclick="closeModal('paymentModal')">&times;</div>
+            <h3 style="margin-top:0;">Record Payment</h3>
+            <input type="hidden" id="pay-id">
+            <div class="form-grid">
+                <div class="input-group full-span">
+                    <label>Staff Name (Required)</label>
+                    <input type="text" id="pay-staff" placeholder="Who collected this?">
+                </div>
+                <div class="input-group full-span"><label>Amount (₱)</label><input type="number" id="pay-amount" style="font-size:18px; font-weight:700;"></div>
+                <div class="input-group full-span"><label>OR Number</label><input type="text" id="pay-or"></div>
+                <div class="input-group full-span"><label>Date</label><input type="date" id="pay-date"></div>
+            </div>
+            <button class="btn-primary" onclick="savePayment()">PROCESS PAYMENT</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-box">
+            <div class="close-btn" onclick="closeModal('profileModal')">&times;</div>
+            <div style="text-align:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;">
+                <h2 id="p-name" style="margin:0;">Name</h2>
+                <div id="p-item" style="color:var(--text-sub); margin-top:5px;">Item</div>
+            </div>
+            
+            <input type="hidden" id="p-id-hidden">
+
+            <div style="display:grid; gap:12px; font-size:14px;">
+                <div style="display:flex; justify-content:space-between;"><span>Address:</span> <strong id="p-address">-</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>Phone:</span> <strong id="p-phone">-</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>Agent:</span> <strong id="p-agent">-</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>Term:</span> <strong id="p-term">-</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:16px; background:var(--bg); padding:10px; border-radius:6px;">
+                    <span>BALANCE:</span> <strong id="p-bal" style="color:var(--danger)">-</strong>
+                </div>
+            </div>
+
+            <button class="btn-primary" style="background:transparent; color:var(--text-main); border:1px solid var(--border); margin-top:15px;" onclick="generateSOA()">📄 GENERATE SOA</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="soaModal">
+        <div class="modal-box">
+            <div class="close-btn" onclick="closeModal('soaModal')">&times;</div>
+            <h3>Statement of Account</h3>
+            <div class="input-group">
+                <textarea id="soa-output" readonly></textarea>
+            </div>
+            <button class="btn-primary" onclick="copySOA()">COPY TEXT</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-box">
+            <div class="close-btn" onclick="closeModal('historyModal')">&times;</div>
+            <h3 style="margin-top:0;">Ledger</h3>
+            <p id="hist-sub" style="font-size:13px; color:var(--text-sub);"></p>
+            <div style="overflow-x:auto;">
+                <table class="history-table">
+                    <thead><tr><th>DATE</th><th>OR#</th><th style="text-align:right;">AMT</th></tr></thead>
+                    <tbody id="history-rows"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ PASTE YOUR GOOGLE APPS SCRIPT URL HERE
+        const API_URL = "https://script.google.com/macros/s/AKfycbxD2FPQv7GFSH3Hr7dwISc-QJoo1I7fkIy8zcFo_pRVHBq4TayhqE3ZOMbpdHF31nOjbg/exec"; 
+        
+        const PASSWORDS = { 'Sogod': 'sogod05', 'Baybay': 'baybay05', 'Hinunangan': 'hinunangan05' };
+        let DB = [], HISTORY = [], currentBranch = '';
+
+        window.onload = function() {
+            if(API_URL.includes("PASTE")) alert("⚠️ API URL MISSING: Please edit the HTML file.");
+            else fetchData();
+        };
+
+        function fetchData() {
+            // Show Loader if viewing records, otherwise silent refresh
+            if(currentBranch) {
+                document.getElementById('records-container').innerHTML = `<div class="loader-container"><div class="spinner"></div><div>SYNCING MAKI SYSTEM...</div></div>`;
+            }
+            
+            fetch(API_URL).then(res=>res.json()).then(data => {
+                DB = Array.isArray(data) ? data : data.customers || [];
+                HISTORY = Array.isArray(data) ? [] : data.history || [];
+                if(currentBranch) renderRecords();
+            }).catch(e => {
+                if(currentBranch) document.getElementById('records-container').innerHTML = "SYNC FAILED";
+            });
+        }
+        
+        function refreshData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.classList.add('spinning');
+            setTimeout(() => btn.classList.remove('spinning'), 500);
+            fetchData();
+        }
+
+        // AUTH
+        function promptPass(b) { currentBranch=b; document.getElementById('passModal').style.display='flex'; setTimeout(()=>document.getElementById('passInput').focus(),100); }
+        function checkPass() {
+            if(document.getElementById('passInput').value === PASSWORDS[currentBranch]) {
+                document.getElementById('branch-select').style.display='none';
+                document.getElementById('data-view').style.display='block';
+                document.getElementById('backBtn').style.display='flex';
+                document.getElementById('headerNewBtn').style.display='block';
+                closeModal('passModal'); renderRecords();
+            } else alert("ACCESS DENIED");
+            document.getElementById('passInput').value='';
+        }
+
+        // RENDER RECORDS WITH FILTERING
+        function renderRecords() {
+            const container = document.getElementById('records-container');
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filterType = document.getElementById('sortFilter').value; // Get filter value
+            container.innerHTML = '';
+            
+            // 1. Initial Branch & Name Filter
+            let data = DB.filter(d => d.branch === currentBranch && String(d.name).toLowerCase().includes(term));
+            
+            // 2. Logic to determine "Overdue" (Late)
+            const now = new Date();
+            data.forEach(rec => {
+                const bal = Number(String(rec.total).replace(/,/g,'')) - Number(String(rec.paid).replace(/,/g,''));
+                rec._bal = bal;
+                rec._isOverdue = false;
+
+                // Simple Overdue Logic: If Balance > 0 AND (Delivery Date + Term Months) < Today
+                if(bal > 0 && rec.date && rec.term) {
+                    const delivery = new Date(rec.date);
+                    const months = parseInt(rec.term) || 0; // Parse "6 months" to 6
+                    if(!isNaN(delivery.getTime()) && months > 0) {
+                        const dueDate = new Date(delivery.setMonth(delivery.getMonth() + months));
+                        if(now > dueDate) {
+                            rec._isOverdue = true;
+                        }
+                    }
+                }
+            });
+
+            // 3. Apply Sort / Additional Filter
+            if (filterType === 'late') {
+                // Show ONLY overdue items
+                data = data.filter(d => d._isOverdue);
+            } else if (filterType === 'recent') {
+                // Sort by Latest Transaction Date
+                data.sort((a, b) => {
+                    const lastPayA = getLastPaymentDate(a.id);
+                    const lastPayB = getLastPaymentDate(b.id);
+                    return lastPayB - lastPayA; // Newest first
+                });
+            } else {
+                // Default: Alphabetical
+                data.sort((a, b) => a.name.localeCompare(b.name));
+            }
+            
+            if(data.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-sub)">NO RECORDS FOUND</div>'; return; }
+
+            // 4. Render
+            data.forEach(rec => {
+                const total = Number(String(rec.total).replace(/,/g,''));
+                const isPaid = rec._bal <= 0;
+                const safeId = String(rec.id).trim();
+
+                container.innerHTML += `
+                <div class="record-card">
+                    ${rec._isOverdue ? '<div class="badge-overdue">OVERDUE</div>' : ''}
+                    <div class="client-info">
+                        <div class="client-name-link" onclick="viewProfile('${safeId}')">${rec.name}</div>
+                        <div class="item-name">${rec.item}</div>
+                    </div>
+                    <div class="stats-area">
+                        <span class="stat-val ${isPaid?'stat-paid':'stat-bal'}">${isPaid?'PAID':'₱'+rec._bal.toLocaleString()}</span>
+                        <div style="font-size:11px; color:var(--text-sub); font-family:var(--font-ui);">Total: ₱${total.toLocaleString()}</div>
+                    </div>
+                    <div class="actions-area">
+                        <button class="btn-card" onclick="viewHistory('${safeId}', '${rec.name}')">HISTORY</button>
+                        ${!isPaid ? `<button class="btn-card pay" data-id="${safeId}" onclick="openPaymentModal(this)">+ PAY</button>` : ''}
+                    </div>
+                </div>`;
+            });
+        }
+
+        // Helper: Get latest payment date for sorting
+        function getLastPaymentDate(customerId) {
+            const payments = HISTORY.filter(h => h.customerId == customerId);
+            if (payments.length === 0) return 0; // No payments = oldest
+            // Sort payments desc
+            payments.sort((a,b) => new Date(b.date) - new Date(a.date));
+            return new Date(payments[0].date).getTime();
+        }
+
+        // PROFILE & SOA
+        function viewProfile(id) {
+            // Use loose equality for finding
+            const rec = DB.find(c => c.id == id);
+            if(!rec) return;
+            
+            document.getElementById('p-id-hidden').value = id;
+            document.getElementById('p-name').innerText = rec.name;
+            document.getElementById('p-item').innerText = rec.item;
+            document.getElementById('p-address').innerText = rec.address||'-';
+            document.getElementById('p-phone').innerText = rec.phone||'-';
+            document.getElementById('p-agent').innerText = rec.agent||'-';
+            document.getElementById('p-term').innerText = rec.term||'-';
+            document.getElementById('p-bal').innerText = "₱" + (Number(rec.total)-Number(rec.paid)).toLocaleString();
+            
+            document.getElementById('profileModal').style.display='flex';
+        }
+
+        function generateSOA() {
+            const id = document.getElementById('p-id-hidden').value;
+            const rec = DB.find(c => c.id == id);
+            const clientHist = HISTORY.filter(h => h.customerId == id).sort((a,b)=>new Date(a.date)-new Date(b.date));
+            const bal = Number(rec.total) - Number(rec.paid);
+
+            let txt = `JASH RECORD - STATEMENT OF ACCOUNT\n--------------------------------\n`;
+            txt += `CUSTOMER: ${rec.name}\n`;
+            txt += `ITEM: ${rec.item}\n`;
+            txt += `TOTAL PRICE: ₱${Number(rec.total).toLocaleString()}\n`;
+            txt += `--------------------------------\nPAYMENT HISTORY:\n`;
+            
+            if(clientHist.length === 0) txt += `(No payments recorded)\n`;
+            
+            clientHist.forEach(h => {
+                const d = h.date ? new Date(h.date).toLocaleDateString() : '-';
+                txt += `${d} | OR#${h.or} | ₱${Number(h.amount).toLocaleString()}\n`;
+            });
+
+            txt += `--------------------------------\n`;
+            txt += `TOTAL PAID: ₱${Number(rec.paid).toLocaleString()}\n`;
+            txt += `BALANCE DUE: ₱${bal.toLocaleString()}\n`;
+            txt += `--------------------------------\n`;
+            txt += `Generated on ${new Date().toLocaleDateString()}`;
+
+            document.getElementById('soa-output').value = txt;
+            closeModal('profileModal');
+            document.getElementById('soaModal').style.display = 'flex';
+        }
+
+        function copySOA() {
+            const copyText = document.getElementById("soa-output");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); 
+            navigator.clipboard.writeText(copyText.value);
+            alert("COPIED TO CLIPBOARD");
+        }
+
+        // ACTIONS
+        function openPaymentModal(btn) {
+            document.getElementById('pay-id').value = btn.getAttribute('data-id');
+            document.getElementById('paymentModal').style.display='flex';
+            document.getElementById('pay-date').valueAsDate = new Date();
+        }
+        
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function savePayment() {
+            const staff = document.getElementById('pay-staff').value;
+            if(!staff) return alert("STAFF NAME REQUIRED");
+            
+            sendData({
+                action: 'add_payment',
+                id: document.getElementById('pay-id').value,
+                staff: staff,
+                amount: document.getElementById('pay-amount').value,
+                or: document.getElementById('pay-or').value,
+                date: document.getElementById('pay-date').value
+            }, 'paymentModal');
+        }
+
+        function viewHistory(id, name) {
+            document.getElementById('historyModal').querySelector('h3').innerText = name;
+            const rows = document.getElementById('history-rows'); rows.innerHTML = '';
+            const hist = HISTORY.filter(h => h.customerId == id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+            let total = 0;
+            if(hist.length===0) rows.innerHTML='<tr><td colspan="3" style="text-align:center;padding:15px;color:var(--text-sub)">NO DATA</td></tr>';
+            hist.forEach(h => {
+                const d = h.date ? new Date(h.date).toLocaleDateString() : '-';
+                rows.innerHTML += `<tr><td>${d}</td><td>${h.or}</td><td style="text-align:right">₱${Number(h.amount).toLocaleString()}</td></tr>`;
+                total += Number(h.amount);
+            });
+            document.getElementById('hist-sub').innerText = `TOTAL COLLECTED: ₱${total.toLocaleString()}`;
+            document.getElementById('historyModal').style.display='flex';
+        }
+
+        function saveNewRecord() {
+            sendData({
+                action: 'add_record', id: Date.now(), branch: currentBranch,
+                name: document.getElementById('nr-name').value, address: document.getElementById('nr-address').value,
+                item: document.getElementById('nr-item').value, total: document.getElementById('nr-total').value,
+                date: document.getElementById('nr-date').value, term: document.getElementById('nr-term').value,
+                agent: document.getElementById('nr-agent').value, phone: document.getElementById('nr-phone').value
+            }, 'newRecordModal');
+        }
+
+        function sendData(payload, modalId) {
+            if(modalId==='paymentModal' && !payload.amount) return alert("AMOUNT REQUIRED");
+            if(modalId==='newRecordModal' && (!payload.name||!payload.total)) return alert("NAME & TOTAL REQUIRED");
+            
+            const btn = document.querySelector(`#${modalId} .btn-primary`);
+            const txt = btn.innerText; btn.innerText="PROCESSING..."; btn.disabled=true;
+
+            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(res=>res.text()).then(()=>{ alert("SUCCESS"); closeModal(modalId); document.querySelectorAll(`#${modalId} input`).forEach(i=>i.value=''); fetchData(); })
+            .catch(e=>{ alert("ERROR"); console.error(e); })
+            .finally(()=>{ btn.innerText=txt; btn.disabled=false; });
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display='none'; }
+        
+        function goHome() { 
+            document.getElementById('branch-select').style.display='grid'; 
+            document.getElementById('data-view').style.display='none'; 
+            document.getElementById('backBtn').style.display='none';
+            // Hide the Header Button on Home Screen
+            document.getElementById('headerNewBtn').style.display='none';
+        }
+        
+        function toggleTheme() { 
+            const b=document.body; 
+            const isLight = b.getAttribute('data-theme')==='light';
+            b.setAttribute('data-theme', isLight?'dark':'light');
+            document.getElementById('themeBtn').innerText = isLight?'☀️':'🌙';
+        }
+        
+        document.getElementById('passInput').addEventListener('keypress',e=>{if(e.key==='Enter')checkPass()});
+        window.onclick=e=>{if(e.target.classList.contains('modal-overlay'))e.target.style.display='none'};
+    </script>
+</body>
+</html>
