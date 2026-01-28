@@ -384,26 +384,7 @@
         // ⚠️ PASTE YOUR GOOGLE APPS SCRIPT URL HERE
         const API_URL = "https://script.google.com/macros/s/AKfycbxD2FPQv7GFSH3Hr7dwISc-QJoo1I7fkIy8zcFo_pRVHBq4TayhqE3ZOMbpdHF31nOjbg/exec"; 
         
-        // --- SECURITY: HASHED PASSWORDS ---
-        // These are the numeric hashes for: sogod05, baybay05, hinunangan05
-        const PASSWORDS = { 
-            'Sogod': -2057711415, 
-            'Baybay': -1915939939, 
-            'Hinunangan': 765077271 
-        };
-
-        // Standard String Hash Function (Safe for offline/local file usage)
-        function hashCode(str) {
-            let hash = 0;
-            if (str.length === 0) return hash;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash | 0; // Convert to 32bit integer
-            }
-            return hash;
-        }
-
+        const PASSWORDS = { 'Sogod': 'sogod05', 'Baybay': 'baybay05', 'Hinunangan': 'hinunangan05' };
         let DB = [], HISTORY = [], currentBranch = '';
 
         window.onload = function() {
@@ -435,21 +416,14 @@
 
         // AUTH
         function promptPass(b) { currentBranch=b; document.getElementById('passModal').style.display='flex'; setTimeout(()=>document.getElementById('passInput').focus(),100); }
-        
         function checkPass() {
-            const input = document.getElementById('passInput').value;
-            const inputHash = hashCode(input); // Hash the input
-
-            if(inputHash === PASSWORDS[currentBranch]) {
+            if(document.getElementById('passInput').value === PASSWORDS[currentBranch]) {
                 document.getElementById('branch-select').style.display='none';
                 document.getElementById('data-view').style.display='block';
                 document.getElementById('backBtn').style.display='flex';
                 document.getElementById('headerNewBtn').style.display='block';
                 closeModal('passModal'); renderRecords();
-            } else {
-                console.log("Access Denied. Input Hash was:", inputHash); // Debug tool for you
-                alert("ACCESS DENIED");
-            }
+            } else alert("ACCESS DENIED");
             document.getElementById('passInput').value='';
         }
 
